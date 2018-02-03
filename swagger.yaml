@@ -1,0 +1,368 @@
+swagger: '2.0'
+info:
+  description: Service API for Topcoder Mobile Connected Cars
+  version: '1.0'
+  title: ConnectedCars
+basePath: /api/v1
+produces: ["application/json"]
+consumes: ["application/json"]
+host: 'topcoder.com'
+paths:
+  /Customer/Lookup:
+    post:
+      summary: Lookup customer information
+      description: Search customer information with email and phone
+      parameters:
+        - in: body
+          name: Payload
+          description: Cusomter contact info to search
+          required: true
+          schema:
+            $ref: '#/definitions/ContactInfo'
+      responses:
+        '200':
+          description: The response containing the customer information
+          schema:
+            $ref: '#/definitions/Customer'
+        '404':
+          description: Request processed but no matching information found
+          schema:
+            type: object
+            properties:
+              message: 
+                type: string
+                example: No matching customer info found
+        '400':
+          description: Bad Request - bad input parameter
+          schema:
+            $ref: '#/definitions/RequestError'
+        '500':
+          description: Internal server error - if the request was proper but the operation failed on the server side
+          schema:
+            $ref: '#/definitions/ServerError'
+  /SIM/Lookup:
+    post:
+      summary: Lookup SIM information
+      description: Search SIM information with VIN number
+      parameters:
+        - in: body
+          name: Payload
+          description: Input VIN number 
+          required: true
+          schema:
+            type: object
+            properties:
+              VIN:
+                type: string
+                minLength: 17
+                maxLength: 17
+                example: 1HGBH41JXMN109186
+      responses:
+        '200':
+          description: 'The response containing the SIM information'
+          schema: 
+            $ref: '#/definitions/SIM'
+        '404':
+          description: Request processed but no matching information found
+          schema:
+            type: object
+            properties:
+              message: 
+                type: string
+                example: No matching SIM info found
+        '400':
+          description: Bad Request - bad input parameter
+          schema:
+            $ref: '#/definitions/RequestError'
+        '500':
+          description: Internal server error - the request was proper but the operation failed on the server side
+          schema:
+            $ref: '#/definitions/ServerError'
+  /PIN/Create:
+    post:
+      summary: PIN creation
+      description: Create a new PIN by Phone number and SIM ID
+      parameters:
+        - in: body
+          name: Payload
+          required: true
+          description: Request Body - Phone number and SIM ID
+          schema:
+            type: object
+            properties:
+              phoneNumber:
+                type: string
+                minLength: 10
+                maxLength: 10
+                example: 9884264884
+              SIM:
+                type: string
+                description: SIM number
+                minLength: 19
+                maxLength: 20
+                example: 8991101200003204510
+      responses:
+        '200':
+          description: 'Successfully created the PIN, returns the newly created PIN object' # best practise is to return the created entity
+          schema:
+            $ref: '#/definitions/PIN'
+        '400':
+          description: Bad Request - bad input parameter
+          schema:
+            $ref: '#/definitions/RequestError'
+        '404':
+          description: 'PIN creation failed - Phone number or SIM unavailable'
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                example: failure - PIN creation failed
+        '500':
+          description: Internal server error - the request was proper but the operation failed on the server side
+          schema:
+            $ref: '#/definitions/ServerError'
+  /PIN/Send:
+    post:
+      summary: PIN Send
+      description: Send the Phone number and SIM information
+      parameters:
+        - in: body
+          name: Payload
+          description: Request Body - post phone number and SIM ID
+          required: true
+          schema:
+            type: object
+            properties:
+              phoneNumber:
+                type: string
+                description: Phone number
+                minLength: 10
+                maxLength: 10
+                example: 9884264484
+              SIM:
+                type: string
+                description: SIM ID
+                minLength: 19
+                maxLength: 20
+                example: 8991101200003204510
+      responses:
+        '200':
+          description: 'Successfully sent'
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                description: Success message
+                example: Success
+        '400':
+          description: Bad Request - bad input parameter
+          schema:
+            $ref: '#/definitions/RequestError'
+        '404':
+          description: 'PIN send failed'
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                example: failure
+        '500':
+          description: Internal server error - the request was proper but the operation failed on the server side
+          schema:
+            $ref: '#/definitions/ServerError'
+  /PIN/Input:
+    post:
+      summary: Validate the PIN
+      description: Validates the input PIN for the SIM and phone numnber combination
+      parameters:
+        - in: body
+          name: Payload
+          description: Request Body - 4 digit PIN and Phone number
+          required: true
+          schema:
+            type: object
+            properties:
+              PIN:
+                type: string
+                description: 4 digit PIN
+                minLength: 4
+                maxLength: 4
+                example: 1245
+              phoneNumber:
+                type: string
+                description: phone number associated with the PIN
+                minLength: 10
+                maxLength: 10
+                example: 9884264884
+      responses:
+        '200':
+          description: 'Successfully validated the PIN, returns the PIN object'
+          schema:
+            $ref: '#/definitions/PIN'
+        '400':
+          description: Bad Request - bad input parameter
+          schema:
+            $ref: '#/definitions/RequestError'
+        '404':
+          description: 'PIN validation failed'
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                example: failure - PIN validation failed
+        '500':
+          description: Internal server error - the request was proper but the operation failed on the server side
+          schema:
+            $ref: '#/definitions/ServerError'
+  /Provisioning:
+    post:
+      summary: Provisioning for the given SIM
+      description: 'The API enables provisioning for the given SIM'
+      parameters:
+        - in: body
+          name: Payload
+          description: Request Body - with SIM ID
+          required: true
+          schema:
+            type: object
+            properties:
+              SIM:
+                type: string
+                description: SIM ID
+                minLength: 19
+                maxLength: 20
+                example: 8991101200003204510
+      responses:
+        '200':
+          description: 'Provisioning successful'
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                description: Success message
+                example: Provisioning successful
+        '400':
+          description: Bad Request - bad input parameter
+          schema:
+            $ref: '#/definitions/RequestError'
+        '404':
+          description: 'Provisioning not successful'
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                example: Provisioning failed
+        '500':
+          description: Internal server error - the request was proper but the operation failed on the server side
+          schema:
+            $ref: '#/definitions/ServerError'
+definitions:
+  ContactInfo:
+    type: object
+    required:
+    - email
+    - phone
+    properties:
+      email:
+        type: string
+        description: customer email
+        format: email
+        example: adam@eve.com
+      phone:
+        type: string
+        description: customer phone number
+        minLength: 10
+        maxLength: 10
+        example: 4088685020
+  PIN:
+    type: object
+    description: PIN model 
+    properties:
+      PIN:
+        type: string
+        example: 1245
+      SIM: 
+        type: string
+        description: SIM ID
+        minLength: 19
+        maxLength: 20
+        example: 8991101200003204510
+      phoneNumber:
+        type: string
+        description: phone number
+        minLength: 10
+        maxLength: 10
+        example: 9884264884
+  SIM:
+    type: object
+    required: 
+      - VIN
+    properties:
+      VIN:
+        type: string
+        description: VIN number
+        minLength: 17
+        maxLength: 17
+        example: 1HGBH41JXMN109186
+      SIM:
+        type: string
+        description: SIM number
+        minLength: 19
+        maxLength: 20
+        example: 8991101200003204510
+  Customer:
+    type: object
+    required: 
+    - firstName
+    - lastName
+    properties:
+      firstName:
+        type: string
+        description: Customer First Name 
+        example: Muralidharan
+      lastName:
+        type: string
+        description: Customer Last Name
+        example: Balanandan
+      contact:
+        type: object
+        $ref: '#/definitions/ContactInfo'
+        description: Customer email and phone
+      address:
+        type: object
+        description: Customer Address information
+        $ref: '#/definitions/Address'
+  Address:
+    type: object
+    properties:
+      street: 
+        type: string
+        example: Catedral
+      city:
+        type: string
+        example: Santiago
+      state:
+        type: string
+        example: RM
+      zip:
+        type: number
+        example: 55421
+  ServerError:
+    description: An error entity. 
+    properties:
+      message:
+        type: string
+        description: The error message
+        example: Internal server error, please try again
+  RequestError:
+    description: An error entity. 
+    properties:
+      message:
+        type: string
+        description: The error message
+        example: Bad request parameter
